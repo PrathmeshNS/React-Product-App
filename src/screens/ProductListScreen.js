@@ -117,25 +117,66 @@ export default function ProductListScreen({ navigation }) {
     return count;
   };
 
+  // Utility: shuffle an array (Fisher-Yates)
+  const shuffleArray = (arr) => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }; 
+
   const clearAllFilters = () => {
     setPriceFilter({ min: null, max: null });
     setRatingFilter(null);
     setCategoryFilter(null);
-  };
+    // Reload full product list and randomize order when filters are cleared.
+    // If a sort is active, do not randomize — keep sorting.
+    const shouldShuffle = sort === 'default';
+    loadPage(0, false, search, { shuffle: shouldShuffle, ignoreFilters: true, sortOption: sort });
+  };  
 
   const removePriceFilter = () => {
     setPriceFilter({ min: null, max: null });
-  };
+    // compute remaining active filters (since state update is async, use current values)
+    const activeAfter = (ratingFilter !== null ? 1 : 0) + (categoryFilter !== null ? 1 : 0);
+    if (activeAfter === 0) {
+      const shouldShuffle = sort === 'default';
+      loadPage(0, false, search, { shuffle: shouldShuffle, ignoreFilters: true, sortOption: sort });
+    } else {
+      loadPage(0, false, search);
+    }
+  };  
 
   const removeRatingFilter = () => {
     setRatingFilter(null);
-  };
+    const activeAfter = (priceFilter.min !== null || priceFilter.max !== null ? 1 : 0) + (categoryFilter !== null ? 1 : 0);
+    if (activeAfter === 0) {
+      const shouldShuffle = sort === 'default';
+      loadPage(0, false, search, { shuffle: shouldShuffle, ignoreFilters: true, sortOption: sort });
+    } else {
+      loadPage(0, false, search);
+    }
+  };  
 
   const removeCategoryFilter = () => {
     setCategoryFilter(null);
-  };
+    const activeAfter = (priceFilter.min !== null || priceFilter.max !== null ? 1 : 0) + (ratingFilter !== null ? 1 : 0);
+    if (activeAfter === 0) {
+      const shouldShuffle = sort === 'default';
+      loadPage(0, false, search, { shuffle: shouldShuffle, ignoreFilters: true, sortOption: sort });
+    } else {
+      loadPage(0, false, search);
+    }
+  };  
 
-  const loadPage = async (pageToLoad = 0, append = false, q = "") => {
+  const loadPage = async (pageToLoad = 0, append = false, q = "", options = {}) => {
+    const { shuffle = false, ignoreFilters = false, sortOption } = options;
+
+    // If a sortOption was explicitly provided, use it; otherwise fall back to state
+    const activeSort = typeof sortOption !== 'undefined' ? sortOption : sort;
+
     if (pageToLoad === 0) {
       setLoading(true);
       setError("");
@@ -150,15 +191,11 @@ export default function ProductListScreen({ navigation }) {
       const newTotal = res.total || 0;
 
       const merged = append ? [...products, ...incoming] : incoming;
-      const filtered = applyFilters(merged);
-      const sorted = applySort(filtered, sort);
+      const filtered = ignoreFilters ? merged : applyFilters(merged);
+      const sorted = applySort(filtered, activeSort);
+      const final = shuffle ? shuffleArray(sorted) : sorted;
 
-      console.log('Products loaded:', sorted.length, 'items');
-      if (sorted.length > 0) {
-        console.log('First product:', sorted[0].title, 'thumbnail:', sorted[0].thumbnail);
-      }
-
-      setProducts(sorted);
+      setProducts(final);
       setTotal(newTotal);
       setPage(pageToLoad);
     } catch (err) {
@@ -168,7 +205,7 @@ export default function ProductListScreen({ navigation }) {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  };
+  }; 
 
   const handleToggleFavorite = async (product) => {
     await toggleFavorite(product);
@@ -189,10 +226,17 @@ export default function ProductListScreen({ navigation }) {
   const onChangeSort = (next) => {
     const newSort = sort === next ? 'default' : next;
     setSort(newSort);
-    // apply to current products
-    const filtered = applyFilters(products);
-    const sorted = applySort(filtered, newSort);
-    setProducts(sorted);
+
+    // If there are active filters, just apply to the current (filtered) list client-side
+    if (getActiveFiltersCount() > 0) {
+      const filtered = applyFilters(products);
+      const sorted = applySort(filtered, newSort);
+      setProducts(sorted);
+    } else {
+      // No active filters — reload page 0 so sorting is applied consistently to fresh data
+      const shouldShuffle = newSort === 'default';
+      loadPage(0, false, search, { shuffle: shouldShuffle, sortOption: newSort });
+    }
   };
 
   // Clear sort

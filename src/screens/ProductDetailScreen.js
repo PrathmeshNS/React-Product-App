@@ -10,7 +10,6 @@ import {
   Dimensions,
   Animated,
   PanResponder,
-  BackHandler,
 } from "react-native";
 import { useFavorites } from "../context/FavoritesContext";
 import { useCart } from "../context/CartContext";
@@ -38,16 +37,6 @@ export default function ProductDetailScreen({ route, navigation }) {
   // Bottom sheet animation
   const sheetHeight = useRef(new Animated.Value(MIN_SHEET_HEIGHT)).current;
   const [currentHeight, setCurrentHeight] = useState(MIN_SHEET_HEIGHT);
-
-  // Handle Android back button
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      navigation.goBack();
-      return true;
-    });
-
-    return () => backHandler.remove();
-  }, [navigation]);
 
   useEffect(() => {
     setIsFav(isFavorite(product.id));
@@ -287,12 +276,14 @@ const getStyles = (colors) =>
       flex: 1,
     },
     imageContainer: {
+      top:20,
       height: height * 0.55,
       width: "100%",
       backgroundColor: "#f0f0f0",
       position: 'relative',
     },
     image: {
+      top: 50,
       width: "100%",
       height: "100%",
     },

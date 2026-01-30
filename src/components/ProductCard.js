@@ -23,7 +23,6 @@ function ProductCard({ product, onPress, isFavorite, onToggleFavorite }) {
 
   // Debug: Log the thumbnail URL
   React.useEffect(() => {
-    console.log('ProductCard - Product:', product.title, 'Thumbnail:', product.thumbnail);
   }, [product.thumbnail]);
   const [adding, setAdding] = useState(false);
   const [addedMsg, setAddedMsg] = useState("");

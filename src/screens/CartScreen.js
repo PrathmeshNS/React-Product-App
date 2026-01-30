@@ -17,25 +17,8 @@ export default function CartScreen({ navigation }) {
   const styles = getStyles(colors);
   const { cart, removeItem, setQuantity, clearCart } = useCart();
 
-  useEffect(() => {
-    const parent = navigation.getParent();
-    const onFocus = () => {
-      parent?.setOptions({ tabBarStyle: { display: "none" } });
-      navigation.setOptions({ headerShown: false });
-    };
-    const onBlur = () => {
-      parent?.setOptions({ tabBarStyle: undefined });
-      navigation.setOptions({ headerShown: undefined });
-    };
-
-    const unsubFocus = navigation.addListener("focus", onFocus);
-    const unsubBlur = navigation.addListener("blur", onBlur);
-
-    return () => {
-      unsubFocus();
-      unsubBlur();
-    };
-  }, [navigation]);
+  // Tab bar is hidden via navigation configuration in TabNavigator
+  // No need for manual hide/show logic here
 
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
