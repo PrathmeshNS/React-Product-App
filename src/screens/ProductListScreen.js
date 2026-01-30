@@ -449,10 +449,13 @@ export default function ProductListScreen({ navigation }) {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.background} />
 
+      {/* Sticky Header Section */}
+      {renderHeader()}
+
+      {/* Scrollable Product List */}
       <FlatList
         data={products}
         keyExtractor={(item) => `product-${item.id}`}
-        ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         onEndReachedThreshold={0.5}

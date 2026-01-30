@@ -20,6 +20,11 @@ function ProductCard({ product, onPress, isFavorite, onToggleFavorite }) {
 
   const [imgLoading, setImgLoading] = useState(true);
   const [imgError, setImgError] = useState(false);
+
+  // Debug: Log the thumbnail URL
+  React.useEffect(() => {
+    console.log('ProductCard - Product:', product.title, 'Thumbnail:', product.thumbnail);
+  }, [product.thumbnail]);
   const [adding, setAdding] = useState(false);
   const [addedMsg, setAddedMsg] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
@@ -75,7 +80,13 @@ function ProductCard({ product, onPress, isFavorite, onToggleFavorite }) {
 
         {/* Image (press to view full fit) */}
         {!imgError && (
-          <TouchableOpacity activeOpacity={0.9} onPress={onImagePress} accessible accessibilityLabel="Open image">
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={onImagePress}
+            accessible
+            accessibilityLabel="Open image"
+            style={{ width: '50%', height: '80%', position: 'absolute' }}
+          >
             <Image
               source={{ uri: product.thumbnail }}
               style={styles.image}
@@ -165,12 +176,6 @@ function ProductCard({ product, onPress, isFavorite, onToggleFavorite }) {
         ) : null}
       </View>
 
-      {/* Image Modal for press fit */}
-      <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
-        <TouchableOpacity style={styles.modalBackdrop} onPress={() => setModalVisible(false)} activeOpacity={1}>
-          <Image source={{ uri: product.thumbnail }} style={[styles.modalImage, { width, height: height * 0.8 }]} resizeMode="contain" />
-        </TouchableOpacity>
-      </Modal>
     </TouchableOpacity>
   );
 }
